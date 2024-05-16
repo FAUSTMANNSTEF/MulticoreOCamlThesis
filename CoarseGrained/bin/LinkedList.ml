@@ -1,96 +1,152 @@
-
-(** A node of our mutable linked list of type int *)
+(* Define a type for nodes in a linked list *)
 type 'a node = {
-  value : 'a ;  
+  value : 'a;
+  key : int;
   mutable next : 'a node option;
-}
-
-(** The linked list itself *)
-type 'a linkedlist = {
-  mutable first : 'a node option ;
-}
-
-(** Create a new node with the given value *)
-let create_node v = {
-  value = v;
-  next = None;
-}
-(**  linked list containing exactly one value *)
-let make_linkedlist v = {
- first = Some (create_node v )
-}
-
-(**  linked list containing no value *)
-let empty = {
-  first = None;
+  }
+  
+type barrier = {
+    waiters : int Atomic.t;
+    size : int;
+    passed : int Atomic.t
     }
-  
-  (* Function to get a random index from a list *)
-  let get_random_index len =
-    Random.self_init ();
-    if len = 0 then 
-      0
-  else
-    Random.int len (*Generates random number from 0 to len-1*)
     
-(* Function to insert a new node at a specific index in the linked list *)
-let rec insert_at_index index new_value head =
-  match index, head with
-  | 0, _ ->  (* Insert at the head *)
-    let new_node = create_node new_value in
-    new_node.next <- head;
-    Some new_node
-  | _, None ->  (* Reach the end without finding the index *)
-    failwith "Index out of bounds"
-  | n, Some node when n > 0 ->  (* Traverse to the correct position *)
-    node.next <- insert_at_index (n - 1) new_value node.next;
-    Some node
-  | _, _ -> failwith "Invalid index"
+    (* Create a new barrier *)
+let create_barrier n = {
+      waiters = Atomic.make n;
+      size = n;
+      passed = Atomic.make 0
+    }
+(* Barrier synchronization function *)
+let await { waiters; size; passed } =
+  if Atomic.fetch_and_add passed 1 = size - 1 then (
+    Atomic.set passed 0;
+    Atomic.set waiters 0
+  );
+
+  while Atomic.get waiters = size do
+    Domain.cpu_relax ()
+  done;
+
+  Atomic.incr waiters;
+  while Atomic.get waiters < size do
+    Domain.cpu_relax ()
+  done
+
+(* Define a type for the linked list itself, including a mutex for thread safety *)
+type 'a linkedlist = {
+  mutable firstnode: 'a node option;
+  lock: Mutex.t;
+}
+
+(* Function to create a new, empty linked list *)
+let create_linkedlist () : 'a linkedlist = {
+  firstnode = None;  (* Start with no nodes *)
+  lock = Mutex.create ();
+}
+
+let additem linkedlist value barrier =
+  await barrier;
+    Mutex.lock linkedlist.lock;
+    let key = Hashtbl.hash value in
+    let rec find_insertion_point pred_opt curr_opt =
+      match (pred_opt, curr_opt) with
+      | (Some pred, Some curr) when curr.key < key ->
+        find_insertion_point (Some curr) curr.next
+      | (Some pred, Some curr) when curr.key = key ->
+        Mutex.unlock linkedlist.lock;
+        false
+      | (Some pred, curr_opt) ->
+        let new_node = {value = value; key = key; next = curr_opt} in
+        pred.next <- Some new_node;
+        Mutex.unlock linkedlist.lock;
+        true
+      (**Last 2 pattern matches might not be needed*)  
+      | (None, Some curr) when curr.key < key ->
+        find_insertion_point (Some curr) curr.next
+      | (None, curr_opt) ->
+        let new_node = {value = value; key = key; next = curr_opt} in
+        linkedlist.firstnode <- Some new_node;
+        Mutex.unlock linkedlist.lock;
+        true
+      | _ -> assert false
+    in
+    find_insertion_point None linkedlist.firstnode
+
+let removeitem linkedlist value barrier =
+  await barrier;
+    Mutex.lock linkedlist.lock;
+    let key = Hashtbl.hash value in
+    let rec find_and_remove pred_opt curr_opt =
+      match (pred_opt, curr_opt) with
+      | (Some pred, Some curr) when curr.key < key ->
+        find_and_remove (Some curr) curr.next
+      | (Some pred, Some curr) when curr.key = key ->
+        pred.next <- curr.next;
+        Mutex.unlock linkedlist.lock;
+        true
+      | (Some pred, curr_opt) ->
+        Mutex.unlock linkedlist.lock;
+        false
+      | (None, Some curr) when curr.key < key ->
+        find_and_remove (Some curr) curr.next
+      | (None, Some curr) ->
+        linkedlist.firstnode <- curr.next;
+        Mutex.unlock linkedlist.lock;
+        true
+      | _ -> assert false
+    in
+    find_and_remove None linkedlist.firstnode
+
+
+ 
+(* Function to print the linked list *)
+let print_list head =
+  let rec print_list_helper = function  (* Helper function using pattern matching *)
+    | None -> ()  (* End of the list *)
+    | Some node ->
+      Printf.printf " Node %d " node.value;
+      print_list_helper node.next  (* Recursive call to print the next node *)
+  in
+  print_list_helper head;  (* Start the recursive printing *)
+  print_newline ()
+
+  (* Test function to initialize and manipulate the linked list *)
+(* let test () =
+  let linkedlist = create_linkedlist () in
+  let node1 = {value = min_int; key = Hashtbl.hash min_int; next = None} in
+  linkedlist.firstnode <- Some node1;
+  ignore (additem linkedlist max_int barrier);  
+  ignore (additem linkedlist 5 barrier);
+  ignore (additem linkedlist 8 barrier);
+  ignore (additem linkedlist 5 barrier);
+  print_list linkedlist.firstnode;
+  ignore (removeitem linkedlist 5 barrier);
+  print_list linkedlist.firstnode  Print the list *)
+
+let testparallel ()=
+  let linkedlist = create_linkedlist () in
+  let node1 = {value = min_int; key = Hashtbl.hash min_int; next = None} in
+  linkedlist.firstnode <- Some node1;
+  let barrier = create_barrier 2 in
+  let domainA = Domain.spawn (fun () -> 
+    ignore (additem linkedlist 1 barrier); 
+    ignore (additem linkedlist 2 barrier);
+    ignore (additem linkedlist 3 barrier);
+    ignore (removeitem linkedlist 20 barrier);
+    ignore (removeitem linkedlist 2 barrier)
+  ) in
+  let domainB = Domain.spawn (fun () -> 
+    ignore (additem linkedlist 4 barrier);
+    ignore (additem linkedlist 5 barrier);
+    ignore (additem linkedlist 6 barrier);
+    ignore (removeitem linkedlist 15 barrier);
+    ignore (removeitem linkedlist 1 barrier)
+  ) in
+  Domain.join domainA;
+  Domain.join domainB;
+  print_list linkedlist.firstnode
   
- (* Function to delete a node at a specific index in the linked list *)
- let rec delete_at_index index head =
-  match index , head with
-  | 0, Some node ->  (* Delete the head *)
-    node.next
-  | _, None ->  (* Reach the end without finding the index *)
-    failwith "Index out of bounds"
-  | n, Some node when n > 0 ->  (* Traverse to the correct position *)
-    node.next <- delete_at_index (n - 1) node.next;
-    Some node
-  | _, _ -> failwith "Invalid index"
+(* Execute the test function *)
+let () = testparallel ()
 
-(* Utility function to print the linked list *)
-let rec print_list = function
-  | None -> print_string "None\n"
-  | Some node ->
-    Printf.printf "%d -> " node.value;
-    print_list node.next
-
-let linked_list = Some (create_node 3)
-let linked_list = insert_at_index 0 5 linked_list
-let linked_list = insert_at_index 1 8 linked_list
-(* Utility function to get the length of a linked list *)
-let rec length_of_list head count =
-  match head with
-  | None -> count
-  | Some node -> length_of_list node.next (count + 1)
-
-let () =
-  let len = length_of_list linked_list 0 in
-  let random_idx = get_random_index len in
-  Printf.printf "Length of linked list 1 : %d\n" len;
-  print_list linked_list;
-  let linked_list = insert_at_index random_idx 80 linked_list in
-  Printf.printf "Inserted 80 at random index %d\n" random_idx;
-  print_string "Linked list contains: ";
-  print_list linked_list;
-  let len = length_of_list linked_list 0 in
-  Printf.printf "Length of linked list 1 : %d\n" len;
-  print_string "Linked list contains: ";
-  print_list linked_list;
-  let random_idx = 15 in
-  Printf.printf "Random index generated: %d\n" random_idx;
-  let linked_list = delete_at_index random_idx linked_list in
-  Printf.printf "Deleted node at random index %d\n" random_idx;
-  print_string "Linked list contains: ";
-  print_list linked_list;
