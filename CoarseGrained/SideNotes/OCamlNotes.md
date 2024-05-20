@@ -59,3 +59,11 @@ Node :
 - Each thread has 2 local variables to traverese , curr and pred
 
 - Nodes are sorted by key and keys are unique
+
+Points to mention in my thesis:
+
+- Explain each approach /their main differences
+- Mention linearization point for each
+
+utop Path:
+#use "/mnt/d/Groningen/Year 3/Thesis/Coding/MulticoreOCamlThesis/CoarseGrained/bin/LinkedList.ml";;
