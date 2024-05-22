@@ -67,3 +67,13 @@ Points to mention in my thesis:
 
 utop Path:
 #use "/mnt/d/Groningen/Year 3/Thesis/Coding/MulticoreOCamlThesis/CoarseGrained/bin/LinkedList.ml";;
+
+Latest Notes of meeting with Dan :
+
+- Add Read.me mentioning specifications and ocaml version etc etc
+- Change the barrier so it doesnt do it every iteration maybe just in the beggingin
+- implement mli files for each
+- implement a generic testing
+- check out saturn bennchmarking
+- implement lock free synchronization
+- refactor
