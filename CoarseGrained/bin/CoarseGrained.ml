@@ -11,6 +11,12 @@ type barrier = {
   size : int;
   passed : int Atomic.t
 }
+(* Linked list for Coarse Grained Synchronization*)
+type 'a linkedlist = {
+  mutable firstnode: 'a node; (* The reason they are mutable is because the might point to different nodes throughout execution of the programm, even though the values remain the same *)
+  mutable lastnode: 'a node;
+  lock: Mutex.t;
+}
 
 (* Creates a new barrier *)
 let create_barrier n = {
@@ -35,14 +41,8 @@ let await { waiters; size; passed } =
     Domain.cpu_relax ()
   done
 
-(* Linked list for Coarse Grained Synchronization*)
-type 'a linkedlist = {
-  mutable firstnode: 'a node; (* The reason they are mutable is because the might point to different nodes throughout execution of the programm, even though the values remain the same *)
-  mutable lastnode: 'a node;
-  lock: Mutex.t;
-}
 
-(* Function to create a new, empty linked list with sentinel nodes *)
+(* Function to create a new empty linked list with sentinel nodes *)
 let create_linkedlist () : 'a linkedlist =
   let sentinel1 = { value = min_int; key = Hashtbl.hash min_int; next = None } in
   let sentinel2 = { value = max_int; key = Hashtbl.hash max_int; next = None } in
