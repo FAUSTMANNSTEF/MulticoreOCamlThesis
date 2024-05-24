@@ -4,14 +4,19 @@ type 'a node = {
   key : int;
   lock: Mutex.t;
   mutable next : 'a node option;
-}
-(* Barrier used to force threads to start working at the same time *)
+  }
+  (* Barrier used to force threads to start working at the same time *)
 type barrier = {
   waiters : int Atomic.t;
   size : int;
   passed : int Atomic.t
-}
-
+  }
+    (* Linked list for Coarse Grained Synchronization*)
+type 'a linkedlist = {
+  mutable firstnode: 'a node; (* The reason they are mutable is because the might point to different nodes throughout execution of the programm, even though the values remain the same *)
+  mutable lastnode: 'a node;
+    }
+    
 (* Creates a new barrier *)
 let create_barrier n = {
   waiters = Atomic.make n;
@@ -35,11 +40,6 @@ let await { waiters; size; passed } =
     Domain.cpu_relax ()
   done
 
-(* Linked list for Coarse Grained Synchronization*)
-type 'a linkedlist = {
-  mutable firstnode: 'a node; (* The reason they are mutable is because the might point to different nodes throughout execution of the programm, even though the values remain the same *)
-  mutable lastnode: 'a node;
-}
 
 (* Function to create a new, empty linked list with sentinel nodes *)
 let create_linkedlist () : 'a linkedlist =
