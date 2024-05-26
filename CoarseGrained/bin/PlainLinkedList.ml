@@ -82,23 +82,23 @@ let print_listkeys linkedlist =
 (* Test parallel operations on the list *)
 let testadditiondeletion () =
   let linkedlist = create_linkedlist () in
-  additem linkedlist 1;
-  additem linkedlist 5;
-  additem linkedlist 3;
-  additem linkedlist 2;
-  removeitem linkedlist 4;
-  removeitem linkedlist 3;
-  additem linkedlist 1;
+  ignore (additem linkedlist 1);
+  ignore (additem linkedlist 5);
+  ignore (additem linkedlist 3);
+  ignore (additem linkedlist 2);
+  ignore (removeitem linkedlist 4);
+  ignore (removeitem linkedlist 3);
+  ignore (additem linkedlist 1);
   print_listvalues linkedlist
 
 let testkeysinascedingorder () =
   let linkedlist = create_linkedlist () in
-  additem linkedlist 1;
-  additem linkedlist 2;
-  additem linkedlist 3;
-  additem linkedlist 4;
-  removeitem linkedlist 4;
-  additem linkedlist 5;
+  ignore (additem linkedlist 1);
+  ignore (additem linkedlist 2);
+  ignore (additem linkedlist 3);
+  ignore (additem linkedlist 4);
+  ignore (removeitem linkedlist 4);
+  ignore (additem linkedlist 5);
   print_listkeys linkedlist
 (** Executes testparallel by default *)
 let () = testadditiondeletion ()
