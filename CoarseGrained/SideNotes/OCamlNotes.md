@@ -70,9 +70,9 @@ utop Path:
 
 Latest Notes of meeting with Dan :
 
-- Add Read.me mentioning specifications and ocaml version etc etc
-- Change the barrier so it doesnt do it every iteration maybe just in the beggingin
-- implement mli files for each
+- Add Read.me mentioning specifications and ocaml version etc etc CHECK,ASK
+- Change the barrier so it doesnt do it every iteration maybe just in the beggingin CHECK,ASK
+- implement mli files for each CHECK,ASK
 - implement a generic testing
 - check out saturn bennchmarking
 - implement lock free synchronization
