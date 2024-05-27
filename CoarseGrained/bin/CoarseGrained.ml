@@ -118,7 +118,7 @@ let testparallel () =
     ignore (additem linkedlist 3 );
     ignore (removeitem linkedlist 20);
     ignore (removeitem linkedlist 4);
-    ignore (removeitem linkedlist 5);
+    ignore (removeitem linkedlist 5)
   ) in
   let domainB = Domain.spawn (fun () ->
     await barrier;

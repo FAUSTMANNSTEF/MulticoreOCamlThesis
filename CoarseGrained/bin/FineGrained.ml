@@ -51,8 +51,7 @@ let create_linkedlist () : 'a linkedlist =
     lastnode = sentinel2;
   }
 (* Function to add a new item to the linked list if not there *)
-let additem linkedlist value barrier =
-    await barrier;
+let additem linkedlist value =
     let key = Hashtbl.hash value in
     let pred = linkedlist.firstnode in
     Mutex.lock pred.lock;
@@ -80,8 +79,7 @@ let additem linkedlist value barrier =
     in
     find_and_insert pred pred.next
 
-let removeitem linkedlist value barrier =
-    await barrier;
+let removeitem linkedlist value =
     let key = Hashtbl.hash value in
     let pred = linkedlist.firstnode in
     Mutex.lock pred.lock;
@@ -123,16 +121,20 @@ let testparallel () =
   let linkedlist = create_linkedlist () in
   let barrier = create_barrier 2 in
   let domainA = Domain.spawn (fun () ->
-    ignore (additem linkedlist 1 barrier);
-    ignore (additem linkedlist 2 barrier);
-    ignore (additem linkedlist 3 barrier);
-    ignore (removeitem linkedlist 2 barrier);
+    await barrier;
+    ignore (additem linkedlist 1 );
+    ignore (additem linkedlist 2 );
+    ignore (additem linkedlist 3 );
+    ignore (removeitem linkedlist 2 );
   ) in
   let domainB = Domain.spawn (fun () ->
-    ignore (additem linkedlist 4 barrier);
-    ignore (additem linkedlist 5 barrier);
-    ignore (removeitem linkedlist 1 barrier);
-    ignore (additem linkedlist 6 barrier);
+    await barrier;
+    ignore (additem linkedlist 4 );
+    ignore (additem linkedlist 5 );
+    ignore (additem linkedlist 6 );
+    ignore (removeitem linkedlist 5);
+    ignore (removeitem linkedlist 3);
+    ignore (removeitem linkedlist 1);
   ) in
   Domain.join domainA;
   Domain.join domainB;
