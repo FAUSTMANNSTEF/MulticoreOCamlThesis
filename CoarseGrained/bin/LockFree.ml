@@ -3,10 +3,12 @@ exception ItemExists
 exception ItemAdded
 exception ItemNotFound
 exception ItemRemoved
-(*#use "/mnt/d/Groningen/Year 3/Thesis/Coding/MulticoreOCamlThesis/CoarseGrained/bin/LockFree.ml";; *)
+(* utop path for me #use "/mnt/d/Groningen/Year 3/Thesis/Coding/MulticoreOCamlThesis/CoarseGrained/bin/LockFree.ml";; *)
 type 'a node
+
 (*Atomic markable reference function used to refference next node *)
 type 'a atomic_mark_ref = ('a node option * bool) Atomic.t
+
 (*Node structure in linked list*)
 and 'a node = {
   value : 'a;
@@ -28,11 +30,6 @@ type 'a linkedlist = {
   mutable lastnode: 'a node;
   }
 
-(*Window *)
-type 'a window = {
-  pred: 'a node;
-  curr: 'a node;
-}
 
 (* Barrier used to force threads to start working at the same time *)
 type barrier = {
@@ -83,10 +80,10 @@ let attempt_mark current expected_node new_mark =
 
 (*Type window used for return value of find_window function*)
 type 'a window = {
-    pred: 'a node;
-    curr: 'a node;
+    pred: 'a node ref;
+    curr: 'a node ref;
   }
-(*Function aimed to replicate find method in book*)
+(* Function aimed to replicate find method in book *)
 let find_window linkedlist key =
   let rec retry () =
     let pred = ref linkedlist.firstnode in
@@ -118,31 +115,52 @@ let find_window linkedlist key =
       with Exit ->
         continue_traversal := false
     done;
-    { pred = !pred; curr = !curr }
+    { pred; curr }  (* Return the references themselves *)
   in
   retry ()
   
+(* Add item to the linked list, using references to the same physical addresses *)
 let additem linkedlist value =
-    let key = Hashtbl.hash value in  
+  let key = Hashtbl.hash value in
   let rec loop () =
     let window = find_window linkedlist key in
     let pred = window.pred in
     let curr = window.curr in
-    if curr.key = key then
-        raise ItemExists
-    else begin
-      let node = make_node value (make_atomic_mark_ref (Some curr) false) in
-      if Atomic.compare_and_set pred.next (Some curr, false) (Some node, false) then
-          raise ItemAdded
+    if !curr.key = key then begin
+      raise ItemExists
+    end else begin
+      let node = make_node value (make_atomic_mark_ref (Some !curr) false) in
+      Printf.printf "Trying CAS:\n";
+      Printf.printf "Pred.next key: %s, %b\n"
+        (match fst (Atomic.get !pred.next) with
+         | Some n -> string_of_int n.key 
+         | None -> "None")
+        (snd (Atomic.get !pred.next));
+      Printf.printf "Expected curr key: %d\n" !curr.key;
+      Printf.printf "New node key: %d\n" node.key;
+
+      (* Debugging: Print memory addresses *)
+      Printf.printf "Pred address: %d\n" (Obj.magic pred : int);
+      Printf.printf "Curr address: %d\n" (Obj.magic curr : int);
+      Printf.printf "Node address: %d\n" (Obj.magic node : int);
+      Printf.printf "Pred.next address: %d\n" (Obj.magic !pred.next : int);
+      Printf.printf "Curr.next address: %d\n" (Obj.magic !curr.next : int);
+      Printf.printf "Node.next address: %d\n" (Obj.magic node.next : int);
+
+      if Atomic.compare_and_set !pred.next (Some !curr, false) (Some node, false) then begin
+        Printf.printf "Item added\n";
+        raise ItemAdded
+      end else begin
+        Printf.printf "CAS failed, retrying...\n";
+      end
     end;
     loop ()
   in
   try
-      loop (); false
+    loop (); false
   with
-    | ItemExists -> false
-    | ItemAdded -> true
-  
+  | ItemExists -> false
+  | ItemAdded -> true
 
 (* let removeitem linkedlist value =
   let key = Hashtbl.hash value in
@@ -215,19 +233,65 @@ let test_single_domain () =
   Domain.join domainA;
   print_list linkedlist
 
-let testfindwindow ()=
-  let linkedlist = create_linkedlist () in
-  let find = find_window linkedlist 1 in
-  let pred = find.pred in
-  let curr = find.curr in
-  Printf.printf "Pred: %d\n" pred.key;
-  Printf.printf "Curr: %d\n" curr.key;
-  Printf.printf "Head: %d\n" linkedlist.firstnode.key;
-  Printf.printf "Tail: %d\n" linkedlist.lastnode.key;
-  (* ignore (additem linkedlist 1);  *)
-  print_list linkedlist
-
-(** Executes testparallel by default *)
-let () = testfindwindow ()
+let testadditem () =
+   let linkedlist = create_linkedlist () in
+   let find = find_window linkedlist 1 in
+   let pred = find.pred in
+   let curr = find.curr in
+   let sentinel1 = linkedlist.firstnode in
+   let sentinel2 = linkedlist.lastnode in
+   let value = 1 in
+   let node = make_node value (make_atomic_mark_ref (Some !curr) false) in
+   
+   let pred_next = Atomic.get !pred.next in
+   (* Print the details before compare_and_set *)
+   Printf.printf "Before CAS:\n";
+   Printf.printf "Pred.next: (%s, %b)\n" 
+     (match fst pred_next with 
+      | Some n -> string_of_int n.key 
+      | None -> "None") 
+     (snd pred_next);
+   Printf.printf "Curr: %d\n" !curr.key;
+   Printf.printf "Node: %d\n" node.key;
+   Printf.printf "Sentinel1:%d\n" sentinel1.key;
+   Printf.printf "Sentinel2:%d\n" sentinel2.key;
+   (* Print the addresses *)
+   Printf.printf "Pred address: %d\n" (Obj.magic pred : int);
+   Printf.printf "Curr address: %d\n" (Obj.magic curr : int);
+   Printf.printf "Node address: %d\n" (Obj.magic node : int);
+   Printf.printf "Pred.next address: %d\n" (Obj.magic !pred.next : int);
+   Printf.printf "Curr.next address: %d\n" (Obj.magic !curr.next : int);
+   Printf.printf "Node.next address: %d\n" (Obj.magic node.next : int);
+   Printf.printf "Sentinel1 address: %d\n" (Obj.magic sentinel1 : int);
+   Printf.printf "Sentinel2 address: %d\n" (Obj.magic sentinel2 : int);
+   
+   
+   (* Perform the compare_and_set operation *)
+   if Atomic.compare_and_set !pred.next (Some !curr, false) (Some node, false) then
+     Printf.printf "Item added\n"
+   else
+     Printf.printf "Item not added\n";
+   
+   (* Print the details after compare_and_set *)
+   let pred_next_after = Atomic.get !pred.next in
+   Printf.printf "After CAS:\n";
+   Printf.printf "Pred.next: (%s, %b)\n" 
+     (match fst pred_next_after with 
+      | Some n -> string_of_int n.key 
+      | None -> "None") 
+     (snd pred_next_after);
+   
+   (* Print the addresses *)
+   Printf.printf "Pred address: %d\n" (Obj.magic pred : int);
+   Printf.printf "Curr address: %d\n" (Obj.magic curr : int);
+   Printf.printf "Node address: %d\n" (Obj.magic node : int);
+   Printf.printf "Pred.next address: %d\n" (Obj.magic !pred.next : int);
+   Printf.printf "Curr.next address: %d\n" (Obj.magic !curr.next : int);
+   Printf.printf "Node.next address: %d\n" (Obj.magic node.next : int);
+   Printf.printf "Sentinel1 address: %d\n" (Obj.magic sentinel1 : int);
+   Printf.printf "Sentinel2 address: %d\n" (Obj.magic sentinel2 : int);
+   Printf.printf "No more infinite loop\n" 
+ 
+ (* Call the test function *)
+ let () = testadditem ()
   
-    
