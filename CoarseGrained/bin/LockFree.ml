@@ -3,11 +3,10 @@ exception ItemExists
 exception ItemAdded
 exception ItemNotFound
 exception ItemRemoved
+(*#use "/mnt/d/Groningen/Year 3/Thesis/Coding/MulticoreOCamlThesis/CoarseGrained/bin/LockFree.ml";; *)
 type 'a node
 (*Atomic markable reference function used to refference next node *)
-type 'a atomic_mark_ref = {
- ref : ('a node option * bool) Atomic.t
-}
+type 'a atomic_mark_ref = ('a node option * bool) Atomic.t
 (*Node structure in linked list*)
 and 'a node = {
   value : 'a;
@@ -15,13 +14,13 @@ and 'a node = {
   next : 'a atomic_mark_ref ;
 }
 (* Function to create a new atomic markable reference *)
-let make_atomic_mark_ref value mark = {
-   ref = Atomic.make (value, mark)
-    }
+let make_atomic_mark_ref value mark = 
+  Atomic.make (value, mark)
+  
 (* Function to create a new node with a given value *)
-let make_node value = 
+let make_node value next = 
   let key = Hashtbl.hash value in
-  { value = value; key = key; next = make_atomic_mark_ref None false }
+  { value = value; key = key; next = next }
   
 (* Linked list*)
 type 'a linkedlist = {
@@ -64,40 +63,23 @@ let await { waiters; size; passed } =
     Domain.cpu_relax ()
   done
 
-(* Function to create a new empty linked list with sentinel nodes *)
+(* Function to create a new linked list *)
 let create_linkedlist () : 'a linkedlist =
-  let sentinel2 = make_node max_int in
-  let sentinel1 = {
-    value = min_int;
-    key = Hashtbl.hash min_int;
-    next = make_atomic_mark_ref (Some sentinel2) false
-  } in
+  let sentinel2 = make_node max_int (make_atomic_mark_ref None false) in
+  let sentinel1 = make_node min_int (make_atomic_mark_ref (Some sentinel2) false) in
   {
     firstnode = sentinel1;
     lastnode = sentinel2;
   }
-
-(*Function to replicate compare_and_set functionality in java from AtomicMarkableReference class,its build in*)
-let compare_and_set current expected_node expected_mark new_node new_mark =
-  let current_value = Atomic.get current.ref in
-  if current_value = (expected_node, expected_mark) then begin
-    Atomic.set current.ref (new_node, new_mark);
-    true
-  end else
-    false 
-(*Function to replicate attempt_mark functionality in java from AtomicMarkableReference class*)
+ 
+(* Function to replicate attempt_mark functionality in java from AtomicMarkableReference class
 let attempt_mark current expected_node new_mark =
   let current_value,_ = Atomic.get current.ref in
   match current_value with
   | Some node when node = expected_node ->
     Atomic.set current.ref (Some expected_node, new_mark);
     true
-  | _ -> false 
-(*Function to replicate get functionality in java from AtomicMarkableReference class*)
-let get amr marked_array =
-  let current_value,current_mark =Atomic.get amr.ref in
-  marked_array.(0)<-current_mark;
-  current_value
+  | _ -> false  *)
 
 (*Type window used for return value of find_window function*)
 type 'a window = {
@@ -108,19 +90,23 @@ type 'a window = {
 let find_window linkedlist key =
   let rec retry () =
     let pred = ref linkedlist.firstnode in
-    let curr = ref (Option.get (fst (Atomic.get !pred.next.ref))) in
+    let curr = ref (Option.get (fst (Atomic.get !pred.next))) in
     let marked = [|false|] in
     let succ = ref None in
     let continue_traversal = ref true in
     while !continue_traversal do
       try
         while true do
-          succ := get !curr.next marked;
+          let current_value, current_mark = Atomic.get !curr.next in
+          marked.(0) <- current_mark;
+          succ := current_value;
           while marked.(0) do
             let snip = Atomic.compare_and_set !pred.next (Some !curr,false ) (!succ,false) in
             if not snip then raise Exit;
             curr := Option.get !succ;
-            succ := get !curr.next marked;
+            let current_value, current_mark = Atomic.get !curr.next in
+            marked.(0) <- current_mark;
+            succ := current_value;
           done;
           if !curr.key >= key then (
             continue_traversal := false;
@@ -137,7 +123,7 @@ let find_window linkedlist key =
   retry ()
   
 let additem linkedlist value =
-    let key = Hashtbl.hash value in
+    let key = Hashtbl.hash value in  
   let rec loop () =
     let window = find_window linkedlist key in
     let pred = window.pred in
@@ -145,8 +131,7 @@ let additem linkedlist value =
     if curr.key = key then
         raise ItemExists
     else begin
-        let node = make_node value in
-      node.next.ref <- Atomic.make (Some curr, false);
+      let node = make_node value (make_atomic_mark_ref (Some curr) false) in
       if Atomic.compare_and_set pred.next (Some curr, false) (Some node, false) then
           raise ItemAdded
     end;
@@ -159,7 +144,7 @@ let additem linkedlist value =
     | ItemAdded -> true
   
 
-let removeitem linkedlist value =
+(* let removeitem linkedlist value =
   let key = Hashtbl.hash value in
   let rec loop () =
     let window = find_window linkedlist key in
@@ -182,7 +167,7 @@ let removeitem linkedlist value =
     loop (); false
   with
   | ItemNotFound -> false
-  | ItemRemoved -> true
+  | ItemRemoved -> true *)
    
 (* Function to print the linked list *)
 let print_list linkedlist =
@@ -190,8 +175,7 @@ let print_list linkedlist =
     | None -> ()
     | Some n ->
       Printf.printf "%d " n.value;
-      (* let next = Option.get (fst (Atomic.get n.next.ref)) in *)
-      print_node (fst (Atomic.get n.next.ref))
+      print_node (fst (Atomic.get n.next))
   in
   print_node (Some linkedlist.firstnode);
   print_newline ()
@@ -215,8 +199,35 @@ let testparallel () =
   Domain.join domainA;
   Domain.join domainB;
   print_list linkedlist
+(* Test single domain operations on the list *)
+let test_single_domain () =
+  let linkedlist = create_linkedlist () in
+  let barrier = create_barrier 1 in
+  let domainA = Domain.spawn (fun () ->
+    await barrier;
+    ignore (additem linkedlist 1);
+    ignore (additem linkedlist 2);
+    ignore (additem linkedlist 3);
+    ignore (additem linkedlist 4);
+    ignore (additem linkedlist 5);
+    ignore (additem linkedlist 6);
+  ) in
+  Domain.join domainA;
+  print_list linkedlist
+
+let testfindwindow ()=
+  let linkedlist = create_linkedlist () in
+  let find = find_window linkedlist 1 in
+  let pred = find.pred in
+  let curr = find.curr in
+  Printf.printf "Pred: %d\n" pred.key;
+  Printf.printf "Curr: %d\n" curr.key;
+  Printf.printf "Head: %d\n" linkedlist.firstnode.key;
+  Printf.printf "Tail: %d\n" linkedlist.lastnode.key;
+  (* ignore (additem linkedlist 1);  *)
+  print_list linkedlist
 
 (** Executes testparallel by default *)
-let () = testparallel ()
+let () = testfindwindow ()
   
     

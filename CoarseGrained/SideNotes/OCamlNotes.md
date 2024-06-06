@@ -66,14 +66,26 @@ Points to mention in my thesis:
 - Mention linearization point for each
 
 utop Path:
-#use "/mnt/d/Groningen/Year 3/Thesis/Coding/MulticoreOCamlThesis/CoarseGrained/bin/LinkedList.ml";;
+#use "/mnt/d/Groningen/Year 3/Thesis/Coding/MulticoreOCamlThesis/CoarseGrained/bin/CoarseGrained.ml";;
 
 Latest Notes of meeting with Dan :
 
-- Add Read.me mentioning specifications and ocaml version etc etc CHECK,ASK
-- Change the barrier so it doesnt do it every iteration maybe just in the beggingin CHECK,ASK
-- implement mli files for each CHECK,ASK
 - implement a generic testing
 - check out saturn bennchmarking
 - implement lock free synchronization
 - refactor
+- fIGURE OUT COMPILING
+  Thesis points worthy mentioning :
+
+#### Lockfree understanding
+
+- Removing
+
+1.  Thread A logically removes currA by setting the mark bit in the node’s next
+2.  thread traverses the list, it cleans up the list by physically
+    removing (using compareAndSet()) any marked nodes it encounters.
+
+- Windows class
+  The Window class’s find() method takes a head node and a key
+  a, and traverses the list, seeking to set pred to the node with the largest key less
+  than a, and curr to the node with the least key greater than or equal to a.
