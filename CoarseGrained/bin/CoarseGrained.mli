@@ -30,6 +30,8 @@ val create_linkedlist : unit -> int linkedlist
 val additem : 'a linkedlist -> 'a -> barrier -> bool
 (* Function to remove an element from the linked list *)
 val removeitem : 'a linkedlist -> 'a -> barrier -> bool
+(*Function to check if the linked list contains a specific element*)
+val contains : 'a linkedlist -> 'a -> bool
 (*Function to print linked list*)
 val print_list : int linkedlist -> unit
 (*Testing Function*)

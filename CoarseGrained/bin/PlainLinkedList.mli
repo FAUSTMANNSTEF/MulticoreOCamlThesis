@@ -16,6 +16,8 @@ val create_linkedlist : unit -> int linkedlist
 val additem : 'a linkedlist -> 'a -> bool
 (* Function to remove an item from the linked list *)
 val removeitem : 'a linkedlist -> 'a -> bool
+(* Function to check if an item is in the linked list *)
+val contains : 'a linkedlist -> 'a -> bool
 (* Function to print the linked list *)
 val print_listvalues : int linkedlist -> unit
 (* Function to check if an item is in the linked list *)

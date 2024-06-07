@@ -95,7 +95,23 @@ let removeitem linkedlist value  =
       false
   in
   find_remove_point linkedlist.firstnode linkedlist.firstnode.next
-
+  
+(*Function that checks if the value exists in the linked list *)
+let contains linkedlist value =
+  Mutex.lock linkedlist.lock;
+  let key = Hashtbl.hash value in
+  let rec find_point curr_opt =
+    match curr_opt with
+    | Some curr when curr.key < key ->
+      find_point curr.next
+    | Some curr when curr.key = key ->
+      Mutex.unlock linkedlist.lock;
+      true
+    | _ ->
+      Mutex.unlock linkedlist.lock;
+      false
+  in
+  find_point linkedlist.firstnode.next
 (* Function to print the linked list *)
 let print_list linkedlist =
   let rec print_node = function
@@ -118,7 +134,9 @@ let testparallel () =
     ignore (additem linkedlist 3 );
     ignore (removeitem linkedlist 20);
     ignore (removeitem linkedlist 4);
-    ignore (removeitem linkedlist 5)
+    ignore (removeitem linkedlist 5);
+    let value = contains linkedlist 1 in
+    Printf.printf "Value 1 is in the list: %b\n" value
   ) in
   let domainB = Domain.spawn (fun () ->
     await barrier;
@@ -128,8 +146,7 @@ let testparallel () =
     ignore (removeitem linkedlist 15);
     ignore (additem linkedlist 8);
     ignore (removeitem linkedlist 3 );
-    ignore (removeitem linkedlist 2 );
-    ignore (removeitem linkedlist 1)
+    ignore (removeitem linkedlist 2 )
   ) in
   Domain.join domainA;
   Domain.join domainB;

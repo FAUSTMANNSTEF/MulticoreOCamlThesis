@@ -57,6 +57,22 @@ let removeitem linkedlist value =
       false
   in
   find_remove_point linkedlist.firstnode linkedlist.firstnode.next
+(* Function to check if an item exists in the list*)
+let contains linkedlist value =
+  let key = Hashtbl.hash value in
+  let rec find_point curr_opt =
+    match curr_opt with
+    (* If current key is less than the key of the value to be removed, continue to the next node *)
+    | Some curr when curr.key < key ->
+      find_point curr.next
+    (* If the key of the value to be removed is in the list,remove *)
+    | Some curr when curr.key = key ->
+      true
+    (* If the key of the value to be removed is not in the list, return false *)
+    | _ ->
+      false
+  in
+  find_point linkedlist.firstnode.next
 
 (* Function to print the linked list *)
 let print_listvalues linkedlist =
@@ -80,7 +96,7 @@ let print_listkeys linkedlist =
   print_node (Some linkedlist.firstnode);
   print_newline ()
 (* Test parallel operations on the list *)
-let testadditiondeletion () =
+let testadditiondeletioncontains () =
   let linkedlist = create_linkedlist () in
   ignore (additem linkedlist 1);
   ignore (additem linkedlist 5);
@@ -89,6 +105,12 @@ let testadditiondeletion () =
   ignore (removeitem linkedlist 4);
   ignore (removeitem linkedlist 3);
   ignore (additem linkedlist 1);
+  let value = contains linkedlist 1 in
+  Printf.printf "Is 1 in the list %b\n" value;
+  let value3= contains linkedlist 3 in
+  Printf.printf "Is 3 in the list %b\n" value3;
+  let value10 = contains linkedlist 10 in
+  Printf.printf "Is 10 in the list %b\n" value10;
   print_listvalues linkedlist
 
 let testkeysinascedingorder () =
@@ -101,4 +123,4 @@ let testkeysinascedingorder () =
   ignore (additem linkedlist 5);
   print_listkeys linkedlist
 (** Executes testparallel by default *)
-let () = testadditiondeletion ()
+let () = testadditiondeletioncontains ()
