@@ -105,6 +105,34 @@ let removeitem linkedlist value =
         false
     in
     find_and_remove pred pred.next
+    
+(* Function to check if a value is in the linked list *)
+let contains linkedlist value =
+    let key = Hashtbl.hash value in
+    let pred = linkedlist.firstnode in
+    Mutex.lock pred.lock;
+    let rec find pred curr_opt =
+      match curr_opt with
+      | Some curr ->
+        Mutex.lock curr.lock;
+        if curr.key < key then (
+          Mutex.unlock pred.lock;
+          find curr curr.next
+        ) else if curr.key = key then (
+          Mutex.unlock curr.lock;
+          Mutex.unlock pred.lock;
+          true
+        ) else (
+          Mutex.unlock curr.lock;
+          Mutex.unlock pred.lock;
+          false
+        )
+      | None -> 
+        Mutex.unlock pred.lock;
+        false
+    in
+    find pred pred.next
+
 (* Function to print the linked list *)
 let print_list linkedlist =
   let rec print_node = function
@@ -126,6 +154,9 @@ let testparallel () =
     ignore (additem linkedlist 2 );
     ignore (additem linkedlist 3 );
     ignore (removeitem linkedlist 2 );
+    ignore (removeitem linkedlist 4 );
+    let value=contains linkedlist 5 in
+    Printf.printf "The value 5 exists ? %b \n" value
   ) in
   let domainB = Domain.spawn (fun () ->
     await barrier;
@@ -135,6 +166,10 @@ let testparallel () =
     ignore (removeitem linkedlist 5);
     ignore (removeitem linkedlist 3);
     ignore (removeitem linkedlist 1);
+    let value2=contains linkedlist 50 in
+    Printf.printf "The value 50 exists? %b \n" value2;
+    let value3=contains linkedlist 4 in
+    Printf.printf "The value 4 exists? %b \n" value3
   ) in
   Domain.join domainA;
   Domain.join domainB;

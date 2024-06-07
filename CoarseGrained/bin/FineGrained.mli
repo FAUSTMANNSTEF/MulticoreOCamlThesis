@@ -26,6 +26,8 @@ val create_linkedlist : unit -> int linkedlist
 val additem : 'a linkedlist -> 'a -> barrier -> bool
 (*Removes a node from the linked list if it is not there*)
 val removeitem : 'a linkedlist -> 'a -> barrier -> bool
+(*Function to check if a value is contained in the linked list*)
+val contains : 'a linkedlist -> 'a -> bool
 (*Prints linked list*)
 val print_list : int linkedlist -> unit
 (*Tests parallel operations on the list*)
