@@ -1,0 +1,4 @@
+(executable
+ (public_name compare)
+ (name main)
+ (libraries Approach unix))
