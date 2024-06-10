@@ -1,4 +1,4 @@
-  (* Test function to initialize and manipulate the linked list *)
+  Test function to initialize and manipulate the linked list
 let testaddition () =
   let linkedlist = create_linkedlist () in
   let node1 = {value = min_int; key = Hashtbl.hash min_int; next = None} in

@@ -23,12 +23,13 @@ val await : barrier -> unit
 (*Creates a new linked list*)
 val create_linkedlist : unit -> int linkedlist
 (*Inserts a new node in the linked list if not there*)
-val additem : 'a linkedlist -> 'a -> barrier -> bool
+val additem : 'a linkedlist -> 'a  -> bool
 (*Removes a node from the linked list if it is not there*)
-val removeitem : 'a linkedlist -> 'a -> barrier -> bool
+val removeitem : 'a linkedlist -> 'a  -> bool
 (*Function to check if a value is contained in the linked list*)
 val contains : 'a linkedlist -> 'a -> bool
 (*Prints linked list*)
 val print_list : int linkedlist -> unit
 (*Tests parallel operations on the list*)
 val testparallel : unit -> unit
+val hello : unit -> unit

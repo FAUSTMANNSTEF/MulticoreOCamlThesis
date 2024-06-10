@@ -176,6 +176,7 @@ let testparallel () =
   print_list linkedlist
 
 (** Executes testparallel by default *)
-let () = testparallel ()
+(* let () = testparallel () *)
   
-
+let hello () =
+  print_endline "Hello, world!"
