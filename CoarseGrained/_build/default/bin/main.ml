@@ -1,72 +1,40 @@
-type queue = {
-  mutable lst : int list;
-  lock : Mutex.t
-}
-type barrier = {
-  waiters : int Atomic.t;
-  size : int;
-  passed : int Atomic.t
-}
+let num_domains = 2
+let num_list_operations = 5000
+let num_elements = 3000 
 
-(* Create a new queue with an associated mutex *)
-let create_queue () : queue = {
-  lst = [];
-  lock = Mutex.create ()
-}
+(* Randomly generate elements *)
+let generate_random_list n =
+  let rec aux n acc =
+    if n = 0 then acc
+    else aux (n - 1) (Random.int 10000 :: acc)
+  in
+  aux n []
 
-(* Create a new barrier *)
-let create_barrier n = {
-  waiters = Atomic.make n;
-  size = n;
-  passed = Atomic.make 0
-}
+let benchmarkplain num_domains num_elements num_list_operations =
+  let random_list = generate_random_list num_elements in
+  let start_time = Unix.gettimeofday () in
+  Approach.PlainLinkedList.benchmark num_domains random_list num_list_operations;
+  let end_time = Unix.gettimeofday () in
+  let elapsed_time = end_time -. start_time in
+  Printf.printf "Execution time of Plain linked list: %.6f seconds\n" elapsed_time
 
-(* Barrier synchronization function *)
-let await { waiters; size; passed } =
-  if Atomic.fetch_and_add passed 1 = size - 1 then (
-    Atomic.set passed 0;
-    Atomic.set waiters 0
-  );
+let benchmarkCoarseGrained num_domains num_elements num_list_operations =
+  let random_list = generate_random_list num_elements in
+  let start_time = Unix.gettimeofday () in
+  Approach.CoarseGrained.benchmark num_domains random_list num_list_operations;
+  let end_time = Unix.gettimeofday () in
+  let elapsed_time = end_time -. start_time in
+  Printf.printf "Execution time of CoarseGrained linked list: %.6f seconds\n" elapsed_time
 
-  while Atomic.get waiters = size do
-    Domain.cpu_relax ()
-  done;
+let benchmarkFineGrained num_domains num_elements num_list_operations =
+  let random_list = generate_random_list num_elements in
+  let start_time = Unix.gettimeofday () in
+  Approach.FineGrained.benchmark num_domains random_list num_list_operations;
+  let end_time = Unix.gettimeofday () in
+  let elapsed_time = end_time -. start_time in
+  Printf.printf "Execution time of FineGrained linked list: %.6f seconds\n" elapsed_time
 
-  Atomic.incr waiters;
-  while Atomic.get waiters < size do
-    Domain.cpu_relax ()
-  done
-
-let push q a id barrier =
-  await barrier;
-  Mutex.lock q.lock;
-  q.lst <- a :: q.lst;  (* This prepends the element. *)
-  Printf.printf "Thread %d pushed\n" id;  (* Corrected line for printing the message with ID *)
-  Mutex.unlock q.lock
-(* Function to push random elements into the queue *)
-let push_random_elements id q num_elements barrier =
-  for _ = 1 to num_elements do
-    let random_element = Random.int 100  (* Generates a random integer between 0 and 99 *)
-    in push q random_element id barrier
-done
-
-(* Set up two domains to push random elements into the queue *)
-let test_random_pushes num_elements_per_domain =
-  let q = create_queue () in
-  let barrier = create_barrier 2 in
-  let domainA = Domain.spawn (fun () -> push_random_elements 1 q num_elements_per_domain barrier) in
-  let domainB = Domain.spawn (fun () -> push_random_elements 2 q num_elements_per_domain barrier) in
-  print_string "Both domains spawned";
-  Domain.join domainA;
-  Domain.join domainB;
-  (List.length q.lst, q.lst)
-
-(* Initialize random seed *)
-let () = Random.self_init ()
-
-(* Call test function and print results *)
 let () =
-  let (len, contents) = test_random_pushes 5 in
-  Printf.printf "Queue length: %d\nContents: %s\n" len (String.concat ", " (List.map string_of_int contents))
-
-
+  benchmarkplain num_domains num_elements num_list_operations;
+  benchmarkFineGrained num_domains num_elements num_list_operations;
+  benchmarkCoarseGrained num_domains num_elements num_list_operations
