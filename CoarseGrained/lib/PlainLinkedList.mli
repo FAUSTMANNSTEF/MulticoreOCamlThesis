@@ -26,15 +26,8 @@ val print_listkeys : 'a linkedlist -> unit
 val generate_random_list : int -> int list
 (*Function to add elements in the linked list*)
 val add_elements: 'a linkedlist -> 'a list -> unit
-(*Function to generate operations*)
-val generate_operations: int -> int list
 (*Function to perform operations*)
 val perform_operations: int linkedlist -> int list-> unit
 (*Function to check if the keys are in ascending order*)
-(* Function to check if an item is in the linked list *)
-(* Test addition and deletion on the list*)
-val testadditiondeletioncontains : unit -> unit
-(* Test keys are in ascending order*)
-val testkeysinascedingorder : unit -> unit
 (*Test with arbitrary amount of lists*)
-val test_with_n_list_operations : int -> unit
+val benchmark : int -> int list -> int -> unit

@@ -132,6 +132,27 @@ let contains linkedlist value =
         false
     in
     find pred pred.next
+(* Add elements to the linked list *)
+let add_elements linkedlist elements =
+  List.iter (fun el -> ignore (additem linkedlist el)) elements
+(* Function to generate random operations *)
+let generate_operations num_ops =
+  let rec aux n acc =
+    if n = 0 then acc
+    else
+      let op = Random.int 7 in (* 0-1: find, 2: delete, 3-6: insert *)
+      aux (n - 1) (op :: acc)
+  in
+  aux num_ops []
+(* Perform the operations on the linked list *)
+let perform_operations linkedlist operations =
+  List.iter (fun op ->
+    let value = Random.int 10000 in
+    match op with
+    | 0 | 1 -> ignore (contains linkedlist value)
+    | 2 -> ignore (removeitem linkedlist value)
+    | _ -> ignore (additem linkedlist value)
+  ) operations
 
 (* Function to print the linked list *)
 let print_list linkedlist =
@@ -144,39 +165,15 @@ let print_list linkedlist =
   print_node (Some linkedlist.firstnode);
   print_newline ()
 
-(* Test parallel operations on the list *)
-let testparallel () =
+let benchmark num_domains random_list num_list_operations =
   let linkedlist = create_linkedlist () in
-  let barrier = create_barrier 2 in
-  let domainA = Domain.spawn (fun () ->
-    await barrier;
-    ignore (additem linkedlist 1 );
-    ignore (additem linkedlist 2 );
-    ignore (additem linkedlist 3 );
-    ignore (removeitem linkedlist 2 );
-    ignore (removeitem linkedlist 4 );
-    let value=contains linkedlist 5 in
-    Printf.printf "The value 5 exists ? %b \n" value
+  add_elements linkedlist random_list;
+  let barrier = create_barrier num_domains in
+  let domains = List.init num_domains (fun _ ->
+    let operations = generate_operations num_list_operations in
+    Domain.spawn (fun () ->
+      await barrier;
+      perform_operations linkedlist operations
+    )
   ) in
-  let domainB = Domain.spawn (fun () ->
-    await barrier;
-    ignore (additem linkedlist 4 );
-    ignore (additem linkedlist 5 );
-    ignore (additem linkedlist 6 );
-    ignore (removeitem linkedlist 5);
-    ignore (removeitem linkedlist 3);
-    ignore (removeitem linkedlist 1);
-    let value2=contains linkedlist 50 in
-    Printf.printf "The value 50 exists? %b \n" value2;
-    let value3=contains linkedlist 4 in
-    Printf.printf "The value 4 exists? %b \n" value3
-  ) in
-  Domain.join domainA;
-  Domain.join domainB;
-  print_list linkedlist
-
-(** Executes testparallel by default *)
-(* let () = testparallel () *)
-  
-let hello () =
-  print_endline "Hello, world!"
+  List.iter Domain.join domains

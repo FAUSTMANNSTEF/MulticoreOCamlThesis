@@ -1,2 +1,19 @@
 (test
- (name test_main))
+ (name test_CoarseGrained)
+ (modules test_CoarseGrained)
+ (libraries Approach unix ))
+
+(test
+ (name test_FineGrained)
+ (modules test_FineGrained)
+ (libraries Approach unix ))
+
+(test
+ (name test_PlainLinkedList)
+ (modules test_PlainLinkedList)
+ (libraries Approach unix ))
+
+(test
+ (name test_main)
+ (modules test_main)
+ (libraries Approach unix ))
