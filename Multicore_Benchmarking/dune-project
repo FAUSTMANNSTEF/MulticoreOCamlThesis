@@ -1,13 +1,13 @@
 (lang dune 3.15)
 
-(name CoarseGrained)
+(name BenchmarkingThesisS4644417)
 
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github FAUSTMANNSTEF/MulticoreOCamlThesis))
 
-(authors "Author Name")
+(authors "Stephanos Faustmann")
 
 (maintainers "Maintainer Name")
 
@@ -16,7 +16,7 @@
 (documentation https://url/to/documentation)
 
 (package
- (name CoarseGrained)
+ (name BenchmarkingThesisS4644417)
  (synopsis "A short synopsis")
  (description "A longer description")
  (depends ocaml dune)
