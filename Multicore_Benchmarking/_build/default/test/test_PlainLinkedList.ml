@@ -3,8 +3,6 @@ open Approach.PlainLinkedList
 (* Test parallel operations on the list *)
 let testadditiondeletioncontains () =
   let linkedlist = create_linkedlist () in
-  let randomelements= generate_random_list 5 in
-  add_elements linkedlist randomelements;
   ignore (additem linkedlist 1);
   ignore (additem linkedlist 5);
   ignore (additem linkedlist 3);

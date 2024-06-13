@@ -132,18 +132,6 @@ let contains linkedlist value =
         false
     in
     find pred pred.next
-(* Add elements to the linked list *)
-let add_elements linkedlist elements =
-  List.iter (fun el -> ignore (additem linkedlist el)) elements
-(* Function to generate random operations *)
-let generate_operations num_ops =
-  let rec aux n acc =
-    if n = 0 then acc
-    else
-      let op = Random.int 7 in (* 0-1: find, 2: delete, 3-6: insert *)
-      aux (n - 1) (op :: acc)
-  in
-  aux num_ops []
 (* Perform the operations on the linked list *)
 let perform_operations linkedlist operations =
   List.iter (fun op ->
@@ -165,12 +153,10 @@ let print_list linkedlist =
   print_node (Some linkedlist.firstnode);
   print_newline ()
 
-let benchmark num_domains random_list num_list_operations =
-  let linkedlist = create_linkedlist () in
-  add_elements linkedlist random_list;
+let benchmark num_domains linkedlist operations_list =
   let barrier = create_barrier num_domains in
-  let domains = List.init num_domains (fun _ ->
-    let operations = generate_operations num_list_operations in
+  let domains = List.init num_domains (fun i ->
+    let operations = List.nth operations_list i in
     Domain.spawn (fun () ->
       await barrier;
       perform_operations linkedlist operations

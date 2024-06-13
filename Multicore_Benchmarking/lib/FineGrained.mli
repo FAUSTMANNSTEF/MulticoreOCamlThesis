@@ -30,11 +30,7 @@ val removeitem : 'a linkedlist -> 'a  -> bool
 val contains : 'a linkedlist -> 'a -> bool
 (*Prints linked list*)
 val print_list : int linkedlist -> unit
-(* Function to add multiple elements to the linked list *)
-val add_elements : 'a linkedlist -> 'a list -> unit
-(* Function to generate a list of random operations *)
-val generate_operations : int -> int list
 (* Function to perform a list of operations on the linked list *)
 val perform_operations : int linkedlist -> int list -> unit
 (* Benchmark function to measure the execution time of parallel operations *)
-val benchmark : int -> int list -> int -> unit
+val benchmark : int -> int linkedlist -> int list list -> unit

@@ -22,12 +22,7 @@ val contains : 'a linkedlist -> 'a -> bool
 val print_listvalues : int linkedlist -> unit
 (* Function to check if an item is in the linked list *)
 val print_listkeys : 'a linkedlist -> unit
-(* Function to generate a random list of integers *)
-val generate_random_list : int -> int list
-(*Function to add elements in the linked list*)
-val add_elements: 'a linkedlist -> 'a list -> unit
 (*Function to perform operations*)
 val perform_operations: int linkedlist -> int list-> unit
-(*Function to check if the keys are in ascending order*)
 (*Test with arbitrary amount of lists*)
-val benchmark : int -> int list -> int -> unit
+val benchmark : int -> int linkedlist -> int list list -> unit

@@ -1,3 +1,4 @@
 (library
  (name Approach)
- (modules CoarseGrained FineGrained PlainLinkedList) )
+ (libraries kcas)
+ (modules CoarseGrained FineGrained PlainLinkedList LockFree) )

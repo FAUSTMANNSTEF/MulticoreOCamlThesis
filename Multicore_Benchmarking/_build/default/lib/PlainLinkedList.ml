@@ -95,29 +95,6 @@ let print_listkeys linkedlist =
   in
   print_node (Some linkedlist.firstnode);
   print_newline ()
-
-(* Randomly generate 3000 elements *)
-let generate_random_list n =
-  let rec aux n acc =
-    if n = 0 then acc
-    else aux (n - 1) (Random.int 10000 :: acc) (* Random numbers between 0 and 9999 *)
-  in
-  aux n []
-
-(* Add elements to the linked list *)
-let add_elements linkedlist elements =
-  List.iter (fun el -> ignore (additem linkedlist el)) elements
-
-(* Function to generate random operations *)
-let generate_operations num_ops =
-  let rec aux n acc =
-    if n = 0 then acc
-    else
-      let op = Random.int 7 in (* 0-1: find, 2: delete, 3-6: insert Ratio as in the Haskell book*)
-      aux (n - 1) (op :: acc)
-  in
-  aux num_ops []
-
 (* Perform the operations on the linked list *)
 let perform_operations linkedlist operations =
   List.iter (fun op ->
@@ -128,10 +105,8 @@ let perform_operations linkedlist operations =
     | _ -> ignore (additem linkedlist value)
   ) operations
 
-  let benchmark num_domains random_list num_list_operations =
-    let linkedlist = create_linkedlist () in
-    add_elements linkedlist random_list;
-    for _ = 1 to num_domains do
-      let operations = generate_operations num_list_operations in
-      perform_operations linkedlist operations;
-    done;
+let benchmark num_domains linkedlist operations_list =
+  for i = 0 to num_domains - 1 do
+    let operations = List.nth operations_list i in
+    perform_operations linkedlist operations;
+  done
