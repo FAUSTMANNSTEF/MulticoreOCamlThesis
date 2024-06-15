@@ -71,9 +71,14 @@ module type ATOMIC_MARKABLE = sig
   
   val removeitem : 'a linkedlist -> 'a -> bool
   (** [removeitem linkedlist value] removes the given [value] from the [linkedlist] and returns true if successful, false if the value is not found. *)
-  
+
   val contains : 'a linkedlist -> 'a -> bool
+  (** [contains linkedlist value] checks if the given [value] is present in the [linkedlist]. 
+      Returns true if the value is found, false otherwise. *)
   
   val benchmark : int -> int linkedlist -> int list list -> unit
-  
+  (** [benchmark n linkedlist operations] runs a performance benchmark by applying the 
+      given [operations] on the [linkedlist] [n] times. The [operations] parameter is a list 
+      of lists of integers, where each inner list represents a series of operations to be 
+      performed in sequence. *)
   
