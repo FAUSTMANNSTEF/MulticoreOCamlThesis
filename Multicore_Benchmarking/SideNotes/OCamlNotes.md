@@ -90,7 +90,19 @@ Latest Notes of meeting with Dan :
   a, and traverses the list, seeking to set pred to the node with the largest key less
   than a, and curr to the node with the least key greater than or equal to a.
 
-- lockfree
-- Refactor main pass method make it look nicer , have like a commonbench and f num domains type of vibe
-- make it work on same data
 - look at saturn and the other benchmarking
+
+Thesis points
+
+- max int as key check it out
+- introduction to concurrency talk about it a bit
+
+  - maybe give a n example on where it would break
+
+  - explain the problem that im solving rather than the solution
+    - dont get into to much technical details
+      priorities
+
+  1. Fix code make sure it works / check out benchmark multicore
+  2. Presentation skeleton
+  3. Work on thesis.

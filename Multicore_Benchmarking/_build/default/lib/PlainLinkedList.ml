@@ -13,7 +13,7 @@ type 'a linkedlist = {
 
 (* Function to create a new empty linked list with sentinel nodes *)
 let create_linkedlist () : 'a linkedlist =
-  let sentinel1 = { value = min_int; key = Hashtbl.hash min_int; next = None } in
+  let sentinel1 = { value = min_int; key =  min_int; next = None } in
   let sentinel2 = { value = max_int; key =  max_int; next = None } in
   sentinel1.next <- Some sentinel2;
   {

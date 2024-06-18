@@ -56,12 +56,20 @@ type 'a linkedlist = {
 }
 
 let create_linkedlist () : 'a linkedlist =
-  let sentinel2 = make_node max_int None in
-  let sentinel1 = make_node min_int (Some (make_markable sentinel2 false)) in
+  let sentinel2 = {
+    value = max_int;
+    key = max_int;
+    next = None
+  } in
   {
-    firstnode = sentinel1;
-    lastnode = sentinel2;
+    firstnode = {
+      value = min_int;
+      key = min_int;
+      next = Some (make_markable sentinel2 false)
+    };
+    lastnode = sentinel2
   }
+
 
 (* Creates a new barrier *)
 let create_barrier n = {
@@ -96,10 +104,6 @@ let print_list linkedlist =
   in
   print_node (linkedlist.firstnode);
   print_newline ()
-
-let make_node value next = 
-  let key = Hashtbl.hash value in
-  { value = value; key = key; next = next }
 
 type 'a window = {
   pred: 'a node;

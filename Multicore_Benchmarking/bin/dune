@@ -1,4 +1,4 @@
 (executable
  (public_name compare)
  (name main)
- (libraries Approach unix kcas))
+ (libraries Approach unix kcas benchmark))
