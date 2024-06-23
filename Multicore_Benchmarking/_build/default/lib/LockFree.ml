@@ -128,10 +128,10 @@ let find_window (linkedlist : 'a linkedlist) key : 'a window =
             marked := current_mark;
             let succ = ref current_value in
             while !marked do
-              let snip = markable_CAS (Option.get !pred.next) !curr false !succ false in
+              let snip = markable_CAS (match !pred.next with Some p -> p | None -> raise Exit) !curr false !succ false in
               if not snip then raise Exit;
               curr := !succ;
-              let current_value, current_mark = get_marked (Option.get !curr.next) in
+              let current_value, current_mark = get_marked (match !curr.next with Some c -> c | None -> raise Exit) in
               marked := current_mark;
               succ := current_value;
             done;
@@ -161,7 +161,7 @@ let additem linkedlist value =
       false
     else
       let node = make_node value (Some (make_markable curr false)) in
-      if markable_CAS (Option.get pred.next) curr false node false then begin
+      if markable_CAS (match pred.next with Some p -> p | None -> raise Exit) curr false node false then begin
         true
       end else 
         loop ()
@@ -177,11 +177,11 @@ let removeitem linkedlist value =
     if curr.key <> key then 
       false
     else 
-      let succ = get_reference (Option.get curr.next) in
-      let snip = markable_CAS (Option.get curr.next) curr false succ true in
+      let succ = get_reference (match curr.next with Some c -> c | None -> raise Exit) in
+      let snip = markable_CAS (match curr.next with Some c -> c | None -> raise Exit) curr false succ true in
       if not snip then loop ()
       else 
-        let _ = markable_CAS (Option.get pred.next) curr false succ false in
+        let _ = markable_CAS (match pred.next with Some p -> p | None -> raise Exit) curr false succ false in
         true
   in
   loop ()
@@ -189,9 +189,9 @@ let removeitem linkedlist value =
 let contains linkedlist value =
   let marked = ref false in
   let key = Hashtbl.hash value in
-  let curr = ref (get_reference (Option.get linkedlist.firstnode.next)) in
+  let curr = ref (get_reference (match linkedlist.firstnode.next with Some f -> f | None -> raise Exit)) in
   while !curr.key < key do
-    let current_value, current_mark = get_marked (Option.get !curr.next) in
+    let current_value, current_mark = get_marked (match !curr.next with Some c -> c | None -> raise Exit) in
     curr := current_value;
     marked := current_mark;
   done;

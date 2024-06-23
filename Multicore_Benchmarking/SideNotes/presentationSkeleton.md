@@ -24,6 +24,7 @@
 
   - Mention the synchronization approaches (e.g., Fine grained, lock-free etc.) .
   - Briefly outline their differences in terms of concurrency control and performance characteristics.
+    Z
 
 - **Benchmarking Approach**:
 
@@ -38,3 +39,10 @@
 ### Q&A (2 minutes)
 
 - **Engage with the Audience**:
+
+##### Dan questions
+
+- Remove figures from all of the pictures in the slides
+- Dan ask about synchronization approaches
+
+- Ask about graphs and stuff to add
