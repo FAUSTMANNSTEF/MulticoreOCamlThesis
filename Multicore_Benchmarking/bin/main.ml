@@ -61,7 +61,7 @@ let benchmark create_linkedlist_fn additem_fn benchmark_fn num_domains random_li
 let do_benchmark num_elements num_list_operations num_iters num_domains add_ratio del_ratio  =
   let random_list = generate_random_list num_elements in
   let operations_list = List.init num_domains (fun _ -> generate_operations (num_list_operations / num_domains) add_ratio del_ratio ) in
-
+  
   let make_bm create_fn add_fn bench_fn () =
     let f = fun _ -> (benchmark create_fn add_fn bench_fn num_domains random_list operations_list) in
     let lst = List.init num_iters f in
@@ -97,6 +97,7 @@ let do_benchmark num_elements num_list_operations num_iters num_domains add_rati
   ];
   print_newline ()
 
+
 let rec main_loop () =
   let num_elements = read_int_with_prompt "Enter the number of elements: " in
   let num_list_operations = read_int_with_prompt "Enter the number of list operations: " in
@@ -120,9 +121,10 @@ let rec main_loop () =
   else
     let num_domains = read_int_with_prompt "Enter the number of domains: " in
     do_benchmark num_elements num_list_operations num_iters num_domains add_ratio del_ratio;
-
+    
+  (* Ensure the loop continues after each set of benchmarks *)
   let continue = read_bool_with_prompt "Do you want to run another benchmark? (yes/no): " in
   if continue then main_loop ()
   else print_endline "Benchmarking completed."
-
+  
 let () = main_loop ()
