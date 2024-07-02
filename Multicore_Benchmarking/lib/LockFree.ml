@@ -178,7 +178,7 @@ let removeitem linkedlist value =
       false
     else 
       let succ = get_reference (match curr.next with Some c -> c | None -> raise Exit) in
-      let snip = markable_CAS (match curr.next with Some c -> c | None -> raise Exit) curr false succ true in
+      let snip = markable_CAS (match curr.next with Some c -> c | None -> raise Exit) succ false succ true in
       if not snip then loop ()
       else 
         let _ = markable_CAS (match pred.next with Some p -> p | None -> raise Exit) curr false succ false in
