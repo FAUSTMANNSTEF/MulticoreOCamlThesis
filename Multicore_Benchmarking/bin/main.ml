@@ -58,9 +58,9 @@ let benchmark create_linkedlist_fn additem_fn benchmark_fn num_domains random_li
   elapsed_time
 
 (* Benchmark setup for different approaches *)
-let do_benchmark num_elements num_list_operations num_iters num_domains add_ratio del_ratio  =
+let do_benchmark num_elements num_list_operations num_iters num_domains add_ratio del_ratio =
   let random_list = generate_random_list num_elements in
-  let operations_list = List.init num_domains (fun _ -> generate_operations (num_list_operations / num_domains) add_ratio del_ratio ) in
+  let operations_list = List.init num_domains (fun _ -> generate_operations (num_list_operations / num_domains) add_ratio del_ratio) in
 
   let make_bm create_fn add_fn bench_fn () =
     let f = fun _ -> (benchmark create_fn add_fn bench_fn num_domains random_list operations_list) in
@@ -107,7 +107,12 @@ let rec main_loop () =
   let del_ratio = read_float_with_prompt "Enter the ratio of deletions (0.0 - 1.0): " in
   let cont_ratio = read_float_with_prompt "Enter the ratio of contains (0.0 - 1.0): " in
 
-  (* Ensure the ratios sum up to 1.0 *)
+  (* Normalize the ratios to sum up to 1.0 *)
+  let total_ratio = add_ratio +. del_ratio +. cont_ratio in
+  let add_ratio = add_ratio /. total_ratio in
+  let del_ratio = del_ratio /. total_ratio in
+  let cont_ratio = cont_ratio /. total_ratio in
+
   if add_ratio +. del_ratio +. cont_ratio <> 1.0 then
     failwith "The sum of the ratios must be 1.0";
 
