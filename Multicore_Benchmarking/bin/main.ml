@@ -40,7 +40,7 @@ let rec read_int_list_with_prompt prompt =
     print_endline "Invalid input. Please enter a space-separated list of integers.";
     read_int_list_with_prompt prompt
 
-(* Randomly generate elements *)
+(* Function that randomly generates elements *)
 let generate_random_list n =
   let rec aux n acc =
     if n = 0 then acc

@@ -13,7 +13,7 @@ type barrier = {
   passed : int Atomic.t
   }
 
-(* Linked list for Coarse Grained Synchronization*)
+(* Linked list for Coarse Grained Synchronization *)
 type 'a linkedlist = {
   mutable firstnode: 'a node; (* The reason they are mutable is because the might point to different nodes throughout execution of the programm, even though the values remain the same *)
   mutable lastnode: 'a node;

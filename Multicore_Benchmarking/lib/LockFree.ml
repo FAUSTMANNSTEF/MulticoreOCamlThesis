@@ -1,6 +1,6 @@
 open Kcas
 
-(** Atomic Markable References using the kcas library for atomic multi-word CAS *)
+(* Atomic Markable References using the kcas library for atomic multi-word CAS *)
 module type ATOMIC_MARKABLE = sig
   type 'a markable
   val markable_CAS : 'a markable -> 'a -> bool -> 'a -> bool -> bool
@@ -27,8 +27,6 @@ module AtomicMarkable : ATOMIC_MARKABLE = struct
   let make_markable value mark =
     { ref = Loc.make value; mark = Loc.make mark}
 end
-
-(** Usage example *)
 
 open AtomicMarkable
 
@@ -108,13 +106,13 @@ let print_list linkedlist =
   print_node (linkedlist.firstnode);
   print_newline ()
 
-(* window type structure *)
+(* Window type structure *)
 type 'a window = {
   pred: 'a node;
   curr: 'a node;
 }
 
-(* Find window function, adhering to the functionality of the function in the book*)
+(* Find window function, adhering to the functionality in the book*)
 let find_window (linkedlist : 'a linkedlist) key : 'a window =
   let  retry () =
     let pred = ref linkedlist.firstnode in
