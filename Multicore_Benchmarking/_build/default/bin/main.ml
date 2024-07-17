@@ -1,4 +1,4 @@
-(* Function to read an integer from terminal*)
+(* Function to read an integer from terminal *)
 let rec read_int_with_prompt prompt =
   try
     print_string prompt;
@@ -40,7 +40,7 @@ let rec read_int_list_with_prompt prompt =
     print_endline "Invalid input. Please enter a space-separated list of integers.";
     read_int_list_with_prompt prompt
 
-(* Randomly generate elements *)
+(* Function that randomly generates elements *)
 let generate_random_list n =
   let rec aux n acc =
     if n = 0 then acc
@@ -119,7 +119,7 @@ let do_benchmark num_elements num_list_operations num_iters num_domains add_rati
   ];
   print_newline ()
 
-
+(* Function to handle the ratios properly *)
 let rec read_ratios () =
   let add_ratio = read_float_with_prompt "Enter the ratio of additions (0.0 - 1.0): " in
   let del_ratio = read_float_with_prompt "Enter the ratio of deletions (0.0 - 1.0): " in
@@ -129,6 +129,7 @@ let rec read_ratios () =
     print_endline "The sum of the ratios is zero. Please enter valid ratios.";
     read_ratios ()
   ) else (
+    (* Normalise the ratios *)
     let total_ratio = add_ratio +. del_ratio +. cont_ratio in
     let add_ratio = add_ratio /. total_ratio in
     let del_ratio = del_ratio /. total_ratio in

@@ -5,7 +5,7 @@ type 'a node = {
   mutable next : 'a node option;
 }
 
-(* Linked list for Coarse Grained Synchronization*)
+(* Linked list for Coarse Grained Synchronization *)
 type 'a linkedlist = {
   mutable firstnode: 'a node; (* The reason they are mutable is because the might point to different nodes throughout execution of the programm, even though the values remain the same *)
   mutable lastnode: 'a node;
@@ -57,7 +57,8 @@ let removeitem linkedlist value =
       false
   in
   find_remove_point linkedlist.firstnode linkedlist.firstnode.next
-(* Function to check if an item exists in the list*)
+
+(* Function to check if an item exists in the list *)
 let contains linkedlist value =
   let key = Hashtbl.hash value in
   let rec find_point curr_opt =
@@ -86,6 +87,7 @@ let print_listvalues linkedlist =
   print_node (Some linkedlist.firstnode);
   print_newline ()
 
+(* Function to print the linked list node keys *)  
 let print_listkeys linkedlist =
   let rec print_node = function
     | None -> ()
@@ -95,6 +97,7 @@ let print_listkeys linkedlist =
   in
   print_node (Some linkedlist.firstnode);
   print_newline ()
+
 (* Perform the operations on the linked list *)
 let perform_operations linkedlist operations =
   List.iter (fun op ->
