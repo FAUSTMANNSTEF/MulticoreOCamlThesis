@@ -1,5 +1,19 @@
 open Approach.FineGrained
 
+(* Function to test basic linked list operations *)
+let test_operations () =
+  let linkedlist = create_linkedlist () in
+  assert (additem linkedlist 1);
+  assert (additem linkedlist 2);
+  assert (additem linkedlist 3);
+  assert (contains linkedlist 1);
+  assert (contains linkedlist 2);
+  assert (contains linkedlist 3);
+  assert (removeitem linkedlist 2);
+  assert (not (removeitem linkedlist 5));
+  assert (not (contains linkedlist 2));
+  Printf.printf "Basic operations for Fine Grained test passed\n"
+
 (* Test parallel operations on the list *)
 let testparallel () =
   let linkedlist = create_linkedlist () in
@@ -31,4 +45,7 @@ let testparallel () =
   Domain.join domainB;
   print_list linkedlist
 
-let () =testparallel ()
+(* Executable to run the tests *) 
+let () =
+test_operations (); 
+testparallel ()

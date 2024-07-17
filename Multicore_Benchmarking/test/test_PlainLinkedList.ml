@@ -1,6 +1,6 @@
 open Approach.PlainLinkedList
 
-(* Test parallel operations on the list *)
+(* Test sequential operations on the list *)
 let testadditiondeletioncontains () =
   let linkedlist = create_linkedlist () in
   ignore (additem linkedlist 1);
@@ -18,6 +18,7 @@ let testadditiondeletioncontains () =
   Printf.printf "Is 10 in the list %b\n" value10;
   print_listvalues linkedlist
 
+(* Test if nodes are in ascending order on the list *) 
 let testkeysinascedingorder () =
   let linkedlist = create_linkedlist () in
   ignore (additem linkedlist 1);
@@ -28,6 +29,7 @@ let testkeysinascedingorder () =
   ignore (additem linkedlist 5);
   print_listkeys linkedlist
 
-let  () =
+(* Executable to run the tests *)  
+let () =
   testadditiondeletioncontains ();
   testkeysinascedingorder ()

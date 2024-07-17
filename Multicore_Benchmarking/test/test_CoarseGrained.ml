@@ -10,7 +10,8 @@ let test_operations () =
   assert (contains linkedlist 3);
   assert (removeitem linkedlist 2);
   assert (not (contains linkedlist 2));
-  Printf.printf "Basic operations test passed\n"
+  assert (not (removeitem linkedlist 5));
+  Printf.printf "Basic operations for Coarse Grained test passed\n"
 
 (* Function to test barrier synchronization *)
 let test_barrier () =
@@ -61,7 +62,7 @@ let test_parallel () =
   print_list linkedlist;
   Printf.printf "Parallel operations test passed\n"
 
-(* Main function to run all tests *)
+(* Executable to run all tests *)
 let () =
   test_operations ();
   test_barrier ();

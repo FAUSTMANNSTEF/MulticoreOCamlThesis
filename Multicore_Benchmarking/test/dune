@@ -14,6 +14,6 @@
  (libraries Approach unix ))
 
 (test
- (name test_main)
- (modules test_main)
+ (name test_LockFree)
+ (modules test_LockFree)
  (libraries Approach unix ))
