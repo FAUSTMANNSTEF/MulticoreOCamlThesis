@@ -5,13 +5,15 @@ type 'a node = {
   lock: Mutex.t;
   mutable next : 'a node option;
   }
-  (* Barrier used to force threads to start working at the same time *)
+
+(* Barrier used to force threads to start working at the same time *)
 type barrier = {
   waiters : int Atomic.t;
   size : int;
   passed : int Atomic.t
   }
-    (* Linked list for Coarse Grained Synchronization*)
+
+(* Linked list for Coarse Grained Synchronization*)
 type 'a linkedlist = {
   mutable firstnode: 'a node; (* The reason they are mutable is because the might point to different nodes throughout execution of the programm, even though the values remain the same *)
   mutable lastnode: 'a node;
@@ -40,7 +42,6 @@ let await { waiters; size; passed } =
     Domain.cpu_relax ()
   done
 
-
 (* Function to create a new, empty linked list with sentinel nodes *)
 let create_linkedlist () : 'a linkedlist =
   let sentinel1 = { value = min_int; key = min_int; lock = Mutex.create (); next = None } in
@@ -50,6 +51,7 @@ let create_linkedlist () : 'a linkedlist =
     firstnode = sentinel1;
     lastnode = sentinel2;
   }
+
 (* Function to add a new item to the linked list if not there *)
 let additem linkedlist value =
     let key = Hashtbl.hash value in
@@ -79,6 +81,7 @@ let additem linkedlist value =
     in
     find_and_insert pred pred.next
 
+(* Function to remove an item from the linked list *)    
 let removeitem linkedlist value =
     let key = Hashtbl.hash value in
     let pred = linkedlist.firstnode in
@@ -132,6 +135,7 @@ let contains linkedlist value =
         false
     in
     find pred pred.next
+
 (* Perform the operations on the linked list *)
 let perform_operations linkedlist operations =
   List.iter (fun op ->

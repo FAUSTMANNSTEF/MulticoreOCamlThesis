@@ -46,15 +46,18 @@ type barrier = {
   passed : int Atomic.t
 }
 
+(* Function to create a node *)
 let make_node value next = 
   let key = Hashtbl.hash value in
   { value = value; key = key; next = next }
 
+(* Linked list structure *)
 type 'a linkedlist = {
   mutable firstnode: 'a node;
   mutable lastnode: 'a node;
 }
 
+(* Function to create a linked list*)
 let create_linkedlist () : 'a linkedlist =
   let sentinel2 = {
     value = max_int;
@@ -69,7 +72,6 @@ let create_linkedlist () : 'a linkedlist =
     };
     lastnode = sentinel2
   }
-
 
 (* Creates a new barrier *)
 let create_barrier n = {
@@ -94,6 +96,7 @@ let await { waiters; size; passed } =
     Domain.cpu_relax ()
   done
 
+(* Function to print the list *)
 let print_list linkedlist =
   let rec print_node n = 
     Printf.printf "%d (%d) : " n.value n.key;
@@ -105,11 +108,13 @@ let print_list linkedlist =
   print_node (linkedlist.firstnode);
   print_newline ()
 
+(* window type structure *)
 type 'a window = {
   pred: 'a node;
   curr: 'a node;
 }
 
+(* Find window function, adhering to the functionality of the function in the book*)
 let find_window (linkedlist : 'a linkedlist) key : 'a window =
   let  retry () =
     let pred = ref linkedlist.firstnode in
@@ -151,6 +156,7 @@ let find_window (linkedlist : 'a linkedlist) key : 'a window =
   in
   retry ()
 
+(* Function to add an item to the linked list *)
 let additem linkedlist value =
   let key = Hashtbl.hash value in
   let rec loop () =
@@ -168,6 +174,7 @@ let additem linkedlist value =
   in
   loop ()
 
+(* Function to remove an item from the linked list *)  
 let removeitem linkedlist value =
   let key = Hashtbl.hash value in
   let rec loop () = 
@@ -186,6 +193,7 @@ let removeitem linkedlist value =
   in
   loop ()
 
+(* Function to check if an item is in the linked list *)
 let contains linkedlist value =
   let marked = ref false in
   let key = Hashtbl.hash value in
@@ -206,7 +214,6 @@ let perform_operations linkedlist operations =
     | 2 -> ignore (removeitem linkedlist value)
     | _ -> ignore (additem linkedlist value)
   ) operations
-
 
 let benchmark num_domains linkedlist operations_list =
   let barrier = create_barrier num_domains in

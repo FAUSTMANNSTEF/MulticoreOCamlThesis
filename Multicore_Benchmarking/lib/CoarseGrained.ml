@@ -11,6 +11,7 @@ type barrier = {
   size : int;
   passed : int Atomic.t
 }
+
 (* Linked list for Coarse Grained Synchronization*)
 type 'a linkedlist = {
   mutable firstnode: 'a node; (* The reason they are mutable is because the might point to different nodes throughout execution of the programm, even though the values remain the same *)
@@ -122,6 +123,7 @@ let perform_operations linkedlist operations =
     | 2 -> ignore (removeitem linkedlist value)
     | _ -> ignore (additem linkedlist value)
   ) operations
+
 (* Function to print the linked list *)
 let print_list linkedlist =
   let rec print_node = function
